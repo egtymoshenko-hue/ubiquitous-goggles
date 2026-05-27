@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VegasGift Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background-color: #0e1621; color: #ffffff; font-family: -apple-system, sans-serif; margin: 0; padding: 15px; text-align: center; -webkit-user-select: none; }
+        .header { background: linear-gradient(135deg, #2481cc, #1a5a96); padding: 15px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .balance { font-size: 26px; font-weight: bold; color: #10b981; margin-top: 5px; }
+        .nav-tabs { display: flex; justify-content: space-around; background: #17212b; padding: 8px; border-radius: 12px; margin-bottom: 15px; }
+        .tab-btn { background: none; border: none; color: #708499; font-size: 14px; font-weight: bold; padding: 10px 20px; cursor: pointer; border-radius: 8px; }
+        .tab-btn.active { background: #2481cc; color: white; }
+        .page { display: none; } .page.active { display: block; }
+        .card { background: #17212b; border: 1px solid #2b394a; border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: left; position: relative; }
+        .btn { background: #2481cc; color: white; border: none; border-radius: 8px; padding: 12px; width: 100%; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .price { color: #f59e0b; font-weight: bold; font-size: 16px; position: absolute; right: 15px; top: 15px; }
+        .crash-display { background: #0b1118; height: 110px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: bold; color: #ef4444; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>Ваш баланс</div>
+        <div class="balance" id="user-balance">0.00 TON</div>
+        <button class="btn" onclick="depositTON()" style="background: #10b981; margin-top: 10px; padding: 8px;">➕ Пополнить в TON</button>
+    </div>
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="openTab('cases')">📦 Кейсы</button>
+        <button class="tab-btn" onclick="openTab('games')">🎮 Игры</button>
+        <button class="tab-btn" onclick="openTab('profile')">👤 Профиль</button>
+    </div>
+    <div id="cases" class="page active">
+        <div class="card"><span class="price">1.5 TON</span><h3>🪵 Обычный кейс</h3><p>Шанс выбить базовые цифровые подарки</p><button class="btn" onclick="openCase(1.5, 'Обычный')">Открыть кейс</button></div>
+        <div class="card"><span class="price">5.0 TON</span><h3>💎 Императорский кейс</h3><p>Выпадают редкие NFT подарки и Xmas Stocking</p><button class="btn" onclick="openCase(5.0, 'Императорский')" style="background: linear-gradient(135deg, #f59e0b, #d97706);">Открыть кейс</button></div>
+    </div>
+    <div id="games" class="page">
+        <div class="card">
+            <h3>📈 Игра "Краш"</h3>
+            <div class="crash-display" id="crash-multiplier">1.00x</div>
+            <button class="btn" onclick="startCrash()" id="crash-btn" style="background: #10b981;">Начать полет</button>
+        </div>
+    </div>
+    <div id="profile" class="page">
+        <div class="card"><h3>Мой профиль</h3><p>Статус: Пользователь</p><p>Инвентарь: <span id="gifts-count">0</span> NFT предметов</p></div>
+    </div>
+    <script>
+        let tg = window.Telegram.WebApp; tg.expand(); let balance = 0.00;
+        function depositTON() { let amount = prompt("Введите сумму пополнения в TON:"); if(amount && !isNaN(amount)) { balance += parseFloat(amount); document.getElementById('user-balance').innerText = balance.toFixed(2) + ' TON'; alert('💰 Баланс успешно демо-пополнен на ' + amount + ' TON!'); } }
+        function openTab(tabId) { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
+        function openCase(cost, name) { 
+            if (balance < cost) { alert('Недостаточно TON! Нажмите кнопку Пополнить.'); return; } 
+            balance -= cost; document.getElementById('user-balance').innerText = balance.toFixed(2) + ' TON'; 
+            let items = ['NFT Xmas Stocking 🧦', 'NFT Diamond 💎', 'NFT Star ⭐️', '2.0 TON 💰'];
+            let win = items[Math.floor(Math.random() * items.length)];
+            alert('🎉 Из кейса "' + name + '" выбито:\n' + win);
+        }
+        let crashInterval;
+        function startCrash() {
+            let btn = document.getElementById('crash-btn'); let disp = document.getElementById('crash-multiplier');
+            if (btn.innerText === 'Забрать куш') { clearInterval(crashInterval); let win = parseFloat(disp.innerText); balance += win; document.getElementById('user-balance').innerText = balance.toFixed(2) + ' TON'; alert('🚀 Успешный вывод! Забрал: ' + win + 'x'); btn.innerText = 'Начать полет'; btn.style.background = '#10b981'; return; }
+            if (balance < 2) { alert('Минимальная ставка 2 TON!'); return; } balance -= 2; document.getElementById('user-balance').innerText = balance.toFixed(2) + ' TON';
+            btn.innerText = 'Забрать куш'; btn.style.background = '#d97706'; disp.style.color = '#ffffff'; let current = 1.00; let crashPoint = (Math.random() * 4 + 1.1).toFixed(2);
+            crashInterval = setInterval(() => { current += 0.05; disp.innerText = current.toFixed(2) + 'x'; if (current >= crashPoint) { clearInterval(crashInterval); disp.innerText = '💥 ВЗРЫВ!'; disp.style.color = '#ef4444'; btn.innerText = 'Начать полет'; btn.style.background = '#10b981'; } }, 60);
+        }
+    </script>
+</body>
+</html>
